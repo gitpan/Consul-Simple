@@ -9,6 +9,7 @@ dist.ini
 lib/Consul/Simple.pm
 lib/Consul/Simple/Test.pm
 t/basic.t
+t/recurse-delete.t
 t/recurse.t
 t/rich.t
 t/timeout.t

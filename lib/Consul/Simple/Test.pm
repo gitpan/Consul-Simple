@@ -1,5 +1,5 @@
 package Consul::Simple::Test;
-$Consul::Simple::Test::VERSION = '1.142390';
+$Consul::Simple::Test::VERSION = '1.142430';
 my $consul_data_dir = '/tmp/consul_data_' . $$;
 our $consul_daemon_pid;
 

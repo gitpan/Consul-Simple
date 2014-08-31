@@ -1,5 +1,5 @@
 package Consul::Simple;
-$Consul::Simple::VERSION = '1.142390';
+$Consul::Simple::VERSION = '1.142430';
 use strict;use warnings;
 use LWP::UserAgent;
 use HTTP::Response;
@@ -19,15 +19,16 @@ sub new {
         %args = @args;
     }
     $self->{consul_server} = $args{consul_server} || 'localhost';
-    $self->{kvPrefix} = $args{kvPrefix} || '/';
-    $self->{kvPrefix} =~ s/\/\//\//g;
-    $self->{kvPrefix} =~ s/\/\//\//g;
-    $self->{kvPrefix} =~ s/\/\//\//g;
-    if($self->{kvPrefix} !~ /^\//) {
-        $self->{kvPrefix} = '/' . $self->{kvPrefix};
+    $args{kv_prefix} = $args{kvPrefix} if $args{kvPrefix};
+    $self->{kv_prefix} = $args{kv_prefix} || '/';
+    $self->{kv_prefix} =~ s/\/\//\//g;
+    $self->{kv_prefix} =~ s/\/\//\//g;
+    $self->{kv_prefix} =~ s/\/\//\//g;
+    if($self->{kv_prefix} !~ /^\//) {
+        $self->{kv_prefix} = '/' . $self->{kv_prefix};
     }
-    if($self->{kvPrefix} !~ /\/$/) {
-        $self->{kvPrefix} = $self->{kvPrefix} . '/';
+    if($self->{kv_prefix} !~ /\/$/) {
+        $self->{kv_prefix} = $self->{kv_prefix} . '/';
     }
     {   my %ua_args = ();
         $ua_args{ssl_opts} = $args{ssl_opts} if $args{ssl_opts};
@@ -64,6 +65,7 @@ sub _do_request {
             $ret = $self->{ua}->request($req, %req_args);
         };
         alarm 0;
+        last if $ret->status_line =~ /^404 /;
         last if $ret and $ret->is_success;
         my $err;
         if($@) {
@@ -79,7 +81,8 @@ sub _do_request {
 
 sub KVGet {
     my $self = shift;
-    my $key = shift or die 'Consul::Simple::KVGet: key required as first argument';
+    my $key = shift;
+    die 'Consul::Simple::KVGet: key required as first argument' unless defined $key;
     my %args;
     {   my @args = @_;
         die 'Consul::Simple::KVGet: even number of arguments required'
@@ -117,7 +120,8 @@ sub KVGet {
 
 sub KVPut {
     my $self = shift;
-    my $key = shift or die 'Consul::Simple::KVPut: key required as first argument';
+    my $key = shift;
+    die 'Consul::Simple::KVPut: key required as first argument' unless defined $key;
     my $value = shift or die 'Consul::Simple::KVPut: value required as second argument';
     if(ref $value) {
         $value = JSON::encode_json($value);
@@ -135,22 +139,25 @@ sub KVPut {
 sub _mk_kv_url {
     my $self = shift;
     my $key = shift;
-    return $self->{proto} . '://' . $self->{consul_server} . ':' . $self->{consul_port} . '/v1/kv' . $self->{kvPrefix} . $key;
+    return $self->{proto} . '://' . $self->{consul_server} . ':' . $self->{consul_port} . '/v1/kv' . $self->{kv_prefix} . $key;
 }
 
 sub KVDelete {
     my $self = shift;
-    my $key = shift or die 'Consul::Simple::KVDelete: key required as first argument';
+    my $key = shift;
+    die 'Consul::Simple::KVDelete: key required as first argument' unless defined $key;
     my %args;
     {   my @args = @_;
         die 'Consul::Simple::KVPut: even number of arguments required'
             if scalar @args % 2;
         %args = @args;
     }
+    my $url = $self->_mk_kv_url($key);
+    $url .= '?recurse' if $args{recurse};
     my $res = $self->_do_request(
         HTTP::Request::Common::_simple_req(
             'DELETE',
-            $self->_mk_kv_url($key)
+            $url
         )
     );
     return $res;
@@ -216,7 +223,7 @@ fail.
 
 =over 4
 
-=item kvPrefix (optional)
+=item kv_prefix (optional)
 
 Adds this prefix to all key/value operations, essentially giving you a
 'namespace' inside of Consul, for the life of this object.  Defaults to
@@ -259,7 +266,7 @@ This calls the Consul HTTP PUT method to set a value in the key/value store.
 
 =item key (required)
 
-This is the key, optionally prefixed by kvPrefix in the constructor.  No
+This is the key, optionally prefixed by kv_prefix in the constructor.  No
 encoding is done; this is passed to Consul as is.
 
 =item value (required)
@@ -280,7 +287,7 @@ The data that was previous PUT is found in the Value field of each record.
 
 =item key (required)
 
-This is the key, optionally prefixed by kvPrefix in the constructor.  No
+This is the key, optionally prefixed by kv_prefix in the constructor.  No
 encoding is done; this is passed to Consul as is.
 
 =item recurse (optional)
@@ -299,10 +306,10 @@ from the key/value store.
 
 =item key (required)
 
-This is the key, optionally prefixed by kvPrefix in the constructor.  No
+This is the key, optionally prefixed by kv_prefix in the constructor.  No
 encoding is done; this is passed to Consul as is.
 
-=item recurse (optional) ##unimplemented
+=item recurse (optional)
 
 Causes the ?recurse flag to be sent along, which will cause Consul to delete
 all of the records 'below' the passed key.

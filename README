@@ -48,7 +48,7 @@ METHODS/CONSTRUCTOR
     Your basic constructor. It does not take any external action, so it can
     not fail.
 
-    kvPrefix (optional)
+    kv_prefix (optional)
         Adds this prefix to all key/value operations, essentially giving you
         a 'namespace' inside of Consul, for the life of this object.
         Defaults to '/'.
@@ -80,8 +80,8 @@ METHODS/CONSTRUCTOR
     store.
 
     key (required)
-        This is the key, optionally prefixed by kvPrefix in the constructor.
-        No encoding is done; this is passed to Consul as is.
+        This is the key, optionally prefixed by kv_prefix in the
+        constructor. No encoding is done; this is passed to Consul as is.
 
     value (required)
         This is the value to be PUT with the associated key. If it is a
@@ -95,8 +95,8 @@ METHODS/CONSTRUCTOR
     record.
 
     key (required)
-        This is the key, optionally prefixed by kvPrefix in the constructor.
-        No encoding is done; this is passed to Consul as is.
+        This is the key, optionally prefixed by kv_prefix in the
+        constructor. No encoding is done; this is passed to Consul as is.
 
     recurse (optional)
         Causes the ?recurse flag to be sent along, which will cause Consul
@@ -107,10 +107,10 @@ METHODS/CONSTRUCTOR
     values from the key/value store.
 
     key (required)
-        This is the key, optionally prefixed by kvPrefix in the constructor.
-        No encoding is done; this is passed to Consul as is.
+        This is the key, optionally prefixed by kv_prefix in the
+        constructor. No encoding is done; this is passed to Consul as is.
 
-    recurse (optional) ##unimplemented
+    recurse (optional)
         Causes the ?recurse flag to be sent along, which will cause Consul
         to delete all of the records 'below' the passed key.
 
